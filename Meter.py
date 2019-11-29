@@ -1,5 +1,5 @@
 import pika          ## To be able to send messages in RabbitMQ
-import time
+import time, json
 import numpy as np
 class Meter():
 	'''
@@ -34,10 +34,22 @@ class Meter():
 		self.connection = pika.BlockingConnection(pika.ConnectionParameters(self.server_ip))
 		self.channel = self.connection.channel()
 
-		self.channel.queue_declare(queue=self.queue_declare)
+		self.channel.queue_declare(queue=self.queue_name)
 
 	def send_value(self,value,timestamp):
-		pass
+		'''
+		Send the meter value with timestamp to the broker.
+		'''
+		data = {
+			"meter_value":value,
+			"timestamp":timestamp
+		}
+
+		self.channel.basic_publish(
+			exchange="",
+			routing_key=self.queue_name,
+			body = json.dumps(data)
+		)
 	
 	def read_value(self):
 		'''
@@ -46,6 +58,9 @@ class Meter():
 
 		return np.random.randint(*self.meter_range)
 
-	self process_meter(self,timestamp):
+	def process_meter(self,timestamp):
+		'''
+		Read and send the value of the meter through the channel.
+		'''
 		m_value = self.read_value()
 		self.send_value(m_value, timestamp)
