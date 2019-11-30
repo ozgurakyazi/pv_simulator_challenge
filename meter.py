@@ -1,6 +1,8 @@
 import pika          ## To be able to send messages in RabbitMQ
-import time, json
+import time, json 
+from datetime import datetime as dt
 import numpy as np
+
 class Meter():
 	'''
 	This class mocks the power comsumption  of a regular home. 
@@ -26,15 +28,7 @@ class Meter():
 		np.random.seed(random_seed)
 		
 		self.setup_connection()
-	def setup_connection(self):
-		'''
-		Sets up the connection and the queue with the name queue_name is created, so that
-		we make sure the queue exists.
-		'''
-		self.connection = pika.BlockingConnection(pika.ConnectionParameters(self.server_ip))
-		self.channel = self.connection.channel()
 
-		self.channel.queue_declare(queue=self.queue_name)
 
 	def send_value(self,value,timestamp):
 		'''
