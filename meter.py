@@ -2,6 +2,7 @@ import pika          ## To be able to send messages in RabbitMQ
 import time, json 
 from datetime import datetime as dt
 import numpy as np
+from rabbit_connector import RabbitConnector as RC
 
 class Meter():
 	'''
@@ -14,36 +15,32 @@ class Meter():
 	random_seed = For reproducible results, seed for the random number.
 	meter_range = range of the meter values to be sampled from a uniform distribution.
 	'''
-	def __init__(
-			self,  server_ip="localhost",
-			queue_name="pv", random_seed = None,
-			meter_range=(0,9000)
-		):
-
-		self.queue_name = queue_name
+	def __init__(self, random_seed = None, meter_range=(0,9000)):
+		
 		self.random_seed = random_seed
 		self.meter_range = meter_range
-		self.server_ip = server_ip
 
 		np.random.seed(random_seed)
 		
-		self.setup_connection()
+		self.rc = RC()
 
 
-	def send_value(self,value,timestamp):
+	def send_value(self,value,timestamp,done):
 		'''
 		Send the meter value with timestamp to the broker.
+		value: meter value sent to the broker.
+		timestamp: timestamp of the meter value
+		done: indicates either the connection should be closed or not.
+			  done == 1 => close the connection in the PV side.
+			  done == 0 => leave connection open. 
 		'''
 		data = {
 			"meter_value":value,
-			"timestamp":timestamp
+			"timestamp":timestamp,
+			"done":done
 		}
-
-		self.channel.basic_publish(
-			exchange="",
-			routing_key=self.queue_name,
-			body = json.dumps(data)
-		)
+		self.rc.send_data(data)
+		print("val:",value)
 	
 	def read_value(self):
 		'''
