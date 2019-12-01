@@ -108,7 +108,7 @@ class Photovoltaic():
 		m_value = data["meter_value"]
 		m_dt = dt.strptime(data["timestamp"],params.datetime_format)
 		pv_value = self.read_value(m_dt)*1000.0
-		total_value = m_value + 1000.0*pv_value
+		total_value = m_value + pv_value
 		write_str = data["timestamp"] +"," +str(m_value) + ","+str(pv_value) + "," + str(total_value)
 		self.the_file.write(write_str + "\n")
 		#self.the_file.flush()
