@@ -3,6 +3,7 @@ import time, json
 from datetime import datetime as dt
 import numpy as np
 from rabbit_connector import RabbitConnector as RC
+import shared_params as params
 
 class Meter():
 	'''
@@ -25,22 +26,38 @@ class Meter():
 		self.rc = RC()
 
 
-	def send_value(self,value,timestamp,done):
+	def send_init(self, file_name, m_type=2):
+		'''
+		Sends a message to PV, to do the initial work.
+
+		file_name: name of the file to write the data
+		m_type: indicates type of message.
+			  m_type == 1 => close the connection in the PV side.
+			  m_type == 0 => leave connection open. 
+			  m_type == 2 => do the initial work in the PV side.
+		'''
+		data = {
+			"file_name":file_name,
+			"m_type":m_type
+		}
+		self.rc.send_data(data)
+	
+	def send_value(self,value,timestamp,m_type):
 		'''
 		Send the meter value with timestamp to the broker.
 		value: meter value sent to the broker.
 		timestamp: timestamp of the meter value
-		done: indicates either the connection should be closed or not.
-			  done == 1 => close the connection in the PV side.
-			  done == 0 => leave connection open. 
+		m_type: indicates type of message.
+			  m_type == 1 => close the connection in the PV side.
+			  m_type == 0 => leave connection open. 
+			  m_type == 2 => do the initial work in the PV side.
 		'''
 		data = {
 			"meter_value":value,
 			"timestamp":timestamp,
-			"done":done
+			"m_type":m_type
 		}
 		self.rc.send_data(data)
-		print("val:",value)
 	
 	def read_value(self):
 		'''
@@ -49,9 +66,9 @@ class Meter():
 
 		return np.random.randint(*self.meter_range)
 
-	def process_meter(self,timestamp):
+	def process_meter(self,timestamp,m_type):
 		'''
 		Read and send the value of the meter through the channel.
 		'''
 		m_value = self.read_value()
-		self.send_value(m_value, timestamp)
+		self.send_value(m_value, timestamp,m_type)
