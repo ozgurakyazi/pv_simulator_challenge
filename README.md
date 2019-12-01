@@ -60,3 +60,10 @@ When the simulation ends (with m_type=1), the waiting for new messages in PV_Sim
 
 To see the simulated values, go into the __PV_Simulator__ notebook's __Visualize__ section. Assign file name of the 
 csv file to be visualized to the variable `output_file_name` and run the cell. 
+
+Example visuals are as follows:
+
+
+![PV and Meter](./visuals/pv_and_meter.png)
+
+![PV plus Meter](./visuals/pv_plus_meter.png)
