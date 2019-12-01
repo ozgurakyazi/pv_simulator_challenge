@@ -31,7 +31,7 @@ class RabbitConnector():
 
 	def start_listening(self,method):
 		self.channel.basic_consume(
-			queue=self.queue_name, on_message_callback=method, auto_ack=True)
+			queue=self.queue_name, on_message_callback=method, auto_ack=False)
 
 		### After this line, the sequential execution of the thread is blocked.!!
 		### CAREFUL###
