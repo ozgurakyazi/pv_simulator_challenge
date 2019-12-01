@@ -2,6 +2,7 @@ import pika
 import numpy as np, json
 from datetime import datetime as dt, time
 from rabbit_connector import RabbitConnector
+import shared_params as params
 
 class Photovoltaic():
 	'''
@@ -26,7 +27,7 @@ class Photovoltaic():
 		## Generate the random value in W, then convert it to kW.
 		rand_value = np.random.randint(-50,50+1)/1000.0 
 
-		sample_time = sample_dt.to_pydatetime().time()
+		sample_time = sample_dt.time()
 
 		## Extract the power value from the equation.
 		if sample_time < time(5,30,0) :
@@ -71,11 +72,43 @@ class Photovoltaic():
 		'''
 		Fired when a message is sent to the channel, if the channel is being listened
 		'''
+		ch.basic_ack(delivery_tag=method.delivery_tag)
 		data = json.loads(body)
 		print("Received:", data)
-		if data["done"] == 1:
-			self.rc.channel.basic_cancel(None)
+			
+		if data["m_type"] == 0:
+			## Do a normal processing.
+			self.process_pv(data)
+
+		elif  data["m_type"] == 2:
+			## Do the initial tasks
+			self.initial_work(data["file_name"])
+
+		elif data["m_type"] == 1:
+			## Stop waiting for consuming. The session is over.
 			self.rc.channel.stop_consuming()
+			self.the_file.close()
 
 	def listen_queue(self):
+		## Starts listening the queue
 		self.rc.start_listening(self.queue_callback)
+
+
+	def initial_work(self,file_name):
+		'''
+		Initial work is done here.
+			* The file with the file_name under ./data folder is created
+			with the header for csv file.
+		'''
+		self.the_file = open("./data/"+file_name, "w+")
+		self.the_file.write(",Meter,PV,Total\n")
+		self.the_file.flush()
+
+	def process_pv(self,data):
+		m_value = data["meter_value"]
+		m_dt = dt.strptime(data["timestamp"],params.datetime_format)
+		pv_value = self.read_value(m_dt)
+		total_value = m_value + 1000.0*pv_value
+		write_str = data["timestamp"] +"," +str(m_value) + ","+str(pv_value) + "," + str(total_value)
+		self.the_file.write(write_str + "\n")
+		#self.the_file.flush()
