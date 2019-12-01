@@ -10,11 +10,19 @@ class Meter():
 	This class mocks the power comsumption  of a regular home. 
 	It generates a random power value and sends it to the RabbitMQ broker, 
 	where it will be further processed.
+
+	Random values are generated as follows:
+		* Create and initial watt value in the __init__, between meter_range range,
+		  and call it as last_watt.
+		* For each read_value, add the uniformly generated random value
+		  which is in the range [200,200] to the last_watt, and 
+		  put the latest last_watt between the range meter_range.
+
 	
 	server_ip = IP of the server to connect, default is localhost.
 	queue_name = queue name of the RabbitMQ broker.
 	random_seed = For reproducible results, seed for the random number.
-	meter_range = range of the meter values to be sampled from a uniform distribution.
+	meter_range = range of the meter values.
 	'''
 	def __init__(self, random_seed = None, meter_range=(0,9000)):
 		
@@ -22,7 +30,7 @@ class Meter():
 		self.meter_range = meter_range
 
 		np.random.seed(random_seed)
-		
+		self.last_watt = np.random.randint(*meter_range)
 		self.rc = RC()
 
 
@@ -63,8 +71,12 @@ class Meter():
 		'''
 		Read and return meter value.
 		'''
+		## increase or decrease the last watt value read from the meter
+		self.last_watt += np.random.randint(-200,201)
 
-		return np.random.randint(*self.meter_range)
+		## make the output between self.meter_range range.
+		self.last_watt = max(min(self.last_watt,self.meter_range[1]), self.meter_range[0])
+		return self.last_watt
 
 	def process_meter(self,timestamp,m_type):
 		'''
