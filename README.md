@@ -67,3 +67,10 @@ Example visuals are as follows:
 ![PV and Meter](./visuals/pv_and_meter.png)
 
 ![PV plus Meter](./visuals/pv_plus_meter.png)
+
+
+## PyTests
+To check whether the application runs on your computer, you can simply run the pytests in the project directory as follows:
+```
+python -m pytest tests/
+```
